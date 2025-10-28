@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사과 게임</title>
+    <link rel="stylesheet" th:href="@{/css/game.css}">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>🍎 사과 잡기 게임 🍎</h1>
+            <div class="score-board">
+                <div class="score">점수: <span id="score">0</span></div>
+                <div class="lives">생명: <span id="lives">3</span></div>
+                <div class="level">레벨: <span id="level">1</span></div>
+            </div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div class="basket" id="basket"></div>
+        </div>
+        
+        <div class="game-controls">
+            <button id="startBtn" class="btn">게임 시작</button>
+            <button id="pauseBtn" class="btn" disabled>일시정지</button>
+            <button id="resetBtn" class="btn">다시 시작</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>게임 방법</h3>
+            <p>마우스를 움직여서 바구니로 떨어지는 사과를 잡으세요!</p>
+            <p>사과를 잡으면 점수가 올라가고, 놓치면 생명이 줄어듭니다.</p>
+            <p>레벨이 올라갈수록 사과가 더 빨리 떨어집니다.</p>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/game.js}"></script>
+</body>
+</html>
