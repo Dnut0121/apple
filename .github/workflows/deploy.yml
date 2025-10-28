@@ -19,23 +19,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Node가 필요없는 정적 리포여도 문제 없음
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # package.json 있으면 설치 + build 스크립트가 있을 때만 빌드
+      # 🔧 잠금파일 유무에 따라 설치 분기 + build 스크립트가 있을 때만 빌드
       - name: Build (if needed)
         run: |
           if [ -f package.json ]; then
-            npm ci
-            if npm run | grep -q " build"; then
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
+            if npm run | grep -qE '(^|[[:space:]])build([[:space:]]|:)'; then
               npm run build || true
             fi
           fi
 
-      # 배포 소스 폴더 자동 감지: build -> dist -> out -> (없으면) .
       - name: Pick deploy dir (build/dist/out or .)
         id: pick
         run: |
@@ -56,13 +58,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.SANDWICH_USER_AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # (선택) 추가 파일 동기화: s3://.../deploy/ -> ./additional/
       - name: Download additional files from S3
         run: |
           mkdir -p additional
           aws s3 sync "s3://${{ env.S3_BUCKET }}/${{ env.USER_ID }}/${{ env.PROJECT_ID }}/deploy/" additional/ || true
 
-      # 아래 ECS/ECR 단계는 Dockerfile 있을 때만 이미지 푸시 (리포 정의/서비스 생성은 실패해도 무시)
       - name: Create ECS Cluster
         run: |
           aws ecs create-cluster --cluster-name sandwich-${{ github.repository_owner }}-${{ github.event.repository.name }} || true
@@ -99,7 +99,6 @@ jobs:
             echo "No Dockerfile, skipping Docker build"
           fi
 
-      # 자동 감지한 폴더를 S3로 업로드
       - name: Deploy to S3
         run: |
           SRC="${{ steps.pick.outputs.dir }}"
