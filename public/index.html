@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사과 박스 퍼즐 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .game-header {
+            margin-bottom: 30px;
+        }
+
+        .game-header h1 {
+            color: #2E8B57;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background: #F0F8FF;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #87CEEB;
+        }
+
+        .score-board div {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2E8B57;
+        }
+
+        .score-board span {
+            color: #FF6347;
+            font-size: 1.3em;
+        }
+
+        .timer {
+            color: #FF4500;
+            font-size: 1.4em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .timer.warning {
+            color: #FF0000;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            border: 3px solid #2E8B57;
+            border-radius: 15px;
+            margin: 20px 0;
+            overflow: hidden;
+            cursor: crosshair;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .apple {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #FF0000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid #8B0000;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .apple:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .apple.selected {
+            background: #FFD700;
+            border-color: #FFA500;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+
+        .apple::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: #228B22;
+            border-radius: 50%;
+        }
+
+        .apple::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 3px;
+            background: #8B4513;
+            border-radius: 1px;
+        }
+
+        .selection-box {
+            position: absolute;
+            border: 3px dashed #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+            pointer-events: none;
+            z-index: 10;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .game-controls {
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: #2E8B57;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin: 0 10px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            background: #228B22;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            background: #CCCCCC;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .instructions {
+            background: #F0F8FF;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #87CEEB;
+            margin-top: 20px;
+        }
+
+        .instructions h3 {
+            color: #2E8B57;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .instructions p {
+            color: #2E8B57;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .game-over-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-over h2 {
+            color: #FF6347;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .game-over p {
+            font-size: 1.2em;
+            color: #2E8B57;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .combo-effect {
+            position: absolute;
+            color: #FFD700;
+            font-size: 30px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 100;
+            animation: comboAnimation 1s ease-out forwards;
+        }
+
+        @keyframes comboAnimation {
+            0% {
+                transform: scale(0.5) translateY(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) translateY(-20px);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) translateY(-40px);
+                opacity: 0;
+            }
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .game-header h1 {
+                font-size: 2em;
+            }
+            
+            .score-board {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .game-area {
+                height: 400px;
+            }
+            
+            .apple {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                margin: 5px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>🍎 사과 박스 퍼즐 🍎</h1>
+            <div class="score-board">
+                <div class="score">점수: <span id="score">0</span></div>
+                <div class="combo">콤보: <span id="combo">0</span></div>
+                <div class="level">레벨: <span id="level">1</span></div>
+                <div class="timer">시간: <span id="timer">120</span>초</div>
+            </div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <!-- 사과들이 여기에 동적으로 생성됩니다 -->
+        </div>
+        
+        <div class="game-controls">
+            <button id="startBtn" class="btn">게임 시작</button>
+            <button id="resetBtn" class="btn">다시 시작</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>게임 방법</h3>
+            <p>마우스로 드래그해서 사과들을 둘러싸세요!</p>
+            <p>둘러싼 사과들의 숫자 합이 정확히 10이 되면 점수를 획득합니다.</p>
+            <p>연속으로 성공하면 콤보 점수를 받을 수 있습니다.</p>
+            <p>모든 사과를 제거하면 다음 레벨로 진행됩니다.</p>
+        </div>
+    </div>
+    
+    <script>
+        class FruitBoxGame {
+            constructor() {
+                this.gameArea = document.getElementById('gameArea');
+                this.scoreElement = document.getElementById('score');
+                this.comboElement = document.getElementById('combo');
+                this.levelElement = document.getElementById('level');
+                this.timerElement = document.getElementById('timer');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                
+                this.score = 0;
+                this.combo = 0;
+                this.level = 1;
+                this.gameRunning = false;
+                this.apples = [];
+                this.selectedApples = [];
+                this.isDragging = false;
+                this.dragStart = { x: 0, y: 0 };
+                this.selectionBox = null;
+                
+                // 타이머 관련 변수
+                this.timeLeft = 120; // 2분 = 120초
+                this.timerInterval = null;
+                
+                this.init();
+            }
+            
+            init() {
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+                
+                this.gameArea.addEventListener('mousedown', (e) => this.startDrag(e));
+                this.gameArea.addEventListener('mousemove', (e) => this.drag(e));
+                this.gameArea.addEventListener('mouseup', (e) => this.endDrag(e));
+                this.gameArea.addEventListener('mouseleave', () => this.cancelDrag());
+                
+                this.updateDisplay();
+            }
+            
+            startGame() {
+                this.gameRunning = true;
+                this.startBtn.disabled = true;
+                this.resetBtn.disabled = false;
+                this.timeLeft = 120; // 2분으로 초기화
+                this.startTimer();
+                this.generateApples();
+            }
+            
+            resetGame() {
+                this.gameRunning = false;
+                this.score = 0;
+                this.combo = 0;
+                this.level = 1;
+                this.timeLeft = 120;
+                
+                this.startBtn.disabled = false;
+                this.resetBtn.disabled = true;
+                
+                this.stopTimer();
+                this.clearApples();
+                this.updateDisplay();
+                
+                // 게임 오버 화면 숨기기
+                const gameOverScreen = document.querySelector('.game-over');
+                if (gameOverScreen) {
+                    gameOverScreen.classList.add('hidden');
+                }
+            }
+            
+            generateApples() {
+                this.clearApples();
+                
+                // 17x10 격자 크기 (원본 게임과 동일)
+                const cols = 17;
+                const rows = 10;
+                const appleSize = 30;
+                const spacing = 40; // 사과 간격 (크기에 맞게 조정)
+                
+                // 게임 영역 중앙에 격자 배치
+                const totalWidth = (cols - 1) * spacing;
+                const totalHeight = (rows - 1) * spacing;
+                const startX = (this.gameArea.offsetWidth - totalWidth) / 2;
+                const startY = (this.gameArea.offsetHeight - totalHeight) / 2;
+                
+                // 격자 형태로 사과 생성
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        this.createApple(
+                            startX + col * spacing,
+                            startY + row * spacing,
+                            row,
+                            col
+                        );
+                    }
+                }
+            }
+            
+            createApple(x, y, row, col) {
+                const apple = document.createElement('div');
+                apple.className = 'apple';
+                
+                // 1-9 사이의 랜덤 숫자
+                const number = Math.floor(Math.random() * 9) + 1;
+                apple.textContent = number;
+                apple.dataset.number = number;
+                apple.dataset.row = row;
+                apple.dataset.col = col;
+                
+                apple.style.left = x + 'px';
+                apple.style.top = y + 'px';
+                
+                this.gameArea.appendChild(apple);
+                this.apples.push(apple);
+            }
+            
+            clearApples() {
+                this.apples.forEach(apple => {
+                    if (apple.parentNode) {
+                        apple.parentNode.removeChild(apple);
+                    }
+                });
+                this.apples = [];
+                this.selectedApples = [];
+            }
+            
+            startDrag(e) {
+                if (!this.gameRunning) return;
+                
+                e.preventDefault(); // 기본 드래그 동작 방지
+                
+                this.isDragging = true;
+                this.dragStart = { x: e.clientX, y: e.clientY };
+                
+                // 선택 박스 생성
+                this.selectionBox = document.createElement('div');
+                this.selectionBox.className = 'selection-box';
+                this.gameArea.appendChild(this.selectionBox);
+                
+                this.updateSelectionBox(e);
+            }
+            
+            drag(e) {
+                if (!this.isDragging) return;
+                
+                e.preventDefault(); // 기본 드래그 동작 방지
+                
+                this.updateSelectionBox(e);
+                this.updateSelectedApples();
+            }
+            
+            endDrag(e) {
+                if (!this.isDragging) return;
+                
+                this.isDragging = false;
+                
+                if (this.selectionBox) {
+                    this.gameArea.removeChild(this.selectionBox);
+                    this.selectionBox = null;
+                }
+                
+                this.checkSelection();
+            }
+            
+            cancelDrag() {
+                if (this.isDragging) {
+                    this.isDragging = false;
+                    
+                    if (this.selectionBox) {
+                        this.gameArea.removeChild(this.selectionBox);
+                        this.selectionBox = null;
+                    }
+                    
+                    this.clearSelection();
+                }
+            }
+            
+            updateSelectionBox(e) {
+                if (!this.selectionBox) return;
+                
+                const rect = this.gameArea.getBoundingClientRect();
+                const startX = this.dragStart.x - rect.left;
+                const startY = this.dragStart.y - rect.top;
+                const currentX = e.clientX - rect.left;
+                const currentY = e.clientY - rect.top;
+                
+                const left = Math.min(startX, currentX);
+                const top = Math.min(startY, currentY);
+                const width = Math.abs(currentX - startX);
+                const height = Math.abs(currentY - startY);
+                
+                this.selectionBox.style.left = left + 'px';
+                this.selectionBox.style.top = top + 'px';
+                this.selectionBox.style.width = width + 'px';
+                this.selectionBox.style.height = height + 'px';
+            }
+            
+            updateSelectedApples() {
+                if (!this.selectionBox) return;
+                
+                const boxRect = this.selectionBox.getBoundingClientRect();
+                
+                // 모든 사과의 선택 상태 초기화
+                this.apples.forEach(apple => {
+                    apple.classList.remove('selected');
+                });
+                this.selectedApples = [];
+                
+                // 선택 박스 안의 모든 사과들 찾기 (연속성 체크 없음)
+                this.apples.forEach(apple => {
+                    const appleRect = apple.getBoundingClientRect();
+                    
+                    // 사과가 선택 박스 안에 있는지 확인
+                    const isInside = appleRect.left + appleRect.width/2 >= boxRect.left &&
+                                   appleRect.left + appleRect.width/2 <= boxRect.right &&
+                                   appleRect.top + appleRect.height/2 >= boxRect.top &&
+                                   appleRect.top + appleRect.height/2 <= boxRect.bottom;
+                    
+                    if (isInside) {
+                        apple.classList.add('selected');
+                        this.selectedApples.push(apple);
+                    }
+                });
+            }
+            
+            
+            clearSelection() {
+                this.selectedApples.forEach(apple => {
+                    apple.classList.remove('selected');
+                });
+                this.selectedApples = [];
+            }
+            
+            checkSelection() {
+                if (this.selectedApples.length === 0) return;
+                
+                const sum = this.selectedApples.reduce((total, apple) => {
+                    return total + parseInt(apple.dataset.number);
+                }, 0);
+                
+                if (sum === 10) {
+                    // 원본 게임 방식: 선택된 사과 개수에 따른 점수
+                    const baseScore = this.selectedApples.length * 10;
+                    this.score += baseScore;
+                    
+                    // 콤보 시스템
+                    this.combo++;
+                    const comboBonus = this.combo * 5;
+                    this.score += comboBonus;
+                    
+                    // 사과 제거
+                    this.selectedApples.forEach(apple => {
+                        this.removeApple(apple);
+                    });
+                    
+                    this.showComboEffect(baseScore + comboBonus);
+                    this.updateDisplay();
+                    
+                    // 모든 사과가 제거되었는지 확인
+                    if (this.apples.length === 0) {
+                        this.levelUp();
+                    }
+                } else {
+                    this.combo = 0;
+                    this.updateDisplay();
+                }
+                
+                this.clearSelection();
+            }
+            
+            removeApple(apple) {
+                const index = this.apples.indexOf(apple);
+                if (index > -1) {
+                    this.apples.splice(index, 1);
+                }
+                if (apple.parentNode) {
+                    apple.parentNode.removeChild(apple);
+                }
+            }
+            
+            levelUp() {
+                this.level++;
+                this.combo = 0;
+                this.updateDisplay();
+                
+                // 레벨 업 효과
+                this.showLevelUpEffect();
+                
+                // 새로운 사과들 생성
+                setTimeout(() => {
+                    this.generateApples();
+                }, 1000);
+            }
+            
+            showComboEffect(totalScore) {
+                const effect = document.createElement('div');
+                effect.className = 'combo-effect';
+                effect.textContent = `+${totalScore}점!`;
+                
+                effect.style.left = '50%';
+                effect.style.top = '50%';
+                effect.style.transform = 'translate(-50%, -50%)';
+                
+                this.gameArea.appendChild(effect);
+                
+                setTimeout(() => {
+                    if (effect.parentNode) {
+                        effect.parentNode.removeChild(effect);
+                    }
+                }, 1000);
+            }
+            
+            showLevelUpEffect() {
+                const effect = document.createElement('div');
+                effect.className = 'combo-effect';
+                effect.textContent = `레벨 ${this.level}!`;
+                effect.style.color = '#FF6347';
+                
+                effect.style.left = '50%';
+                effect.style.top = '50%';
+                effect.style.transform = 'translate(-50%, -50%)';
+                
+                this.gameArea.appendChild(effect);
+                
+                setTimeout(() => {
+                    if (effect.parentNode) {
+                        effect.parentNode.removeChild(effect);
+                    }
+                }, 1500);
+            }
+            
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateDisplay();
+                    
+                    // 30초 이하일 때 경고 효과
+                    if (this.timeLeft <= 30) {
+                        this.timerElement.parentElement.classList.add('warning');
+                    }
+                    
+                    // 시간 초과
+                    if (this.timeLeft <= 0) {
+                        this.gameOver();
+                    }
+                }, 1000);
+            }
+            
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+                this.timerElement.parentElement.classList.remove('warning');
+            }
+            
+            gameOver() {
+                this.gameRunning = false;
+                this.stopTimer();
+                
+                // 게임 오버 화면 표시
+                this.showGameOverScreen();
+            }
+            
+            showGameOverScreen() {
+                const gameOverDiv = document.createElement('div');
+                gameOverDiv.className = 'game-over';
+                gameOverDiv.innerHTML = `
+                    <div class="game-over-content">
+                        <h2>⏰ 시간 종료!</h2>
+                        <p>최종 점수: <span style="color: #FF6347; font-size: 1.5em; font-weight: bold;">${this.score}</span>점</p>
+                        <p>달성 레벨: <span style="color: #2E8B57; font-size: 1.3em; font-weight: bold;">${this.level}</span></p>
+                        <button class="btn" onclick="location.reload()">다시 시작</button>
+                    </div>
+                `;
+                document.body.appendChild(gameOverDiv);
+            }
+            
+            updateDisplay() {
+                this.scoreElement.textContent = this.score;
+                this.comboElement.textContent = this.combo;
+                this.levelElement.textContent = this.level;
+                this.timerElement.textContent = this.timeLeft;
+            }
+        }
+
+        // 게임 시작
+        document.addEventListener('DOMContentLoaded', () => {
+            new FruitBoxGame();
+        });
+    </script>
+</body>
+</html>
