@@ -1,5 +1,5 @@
     {
-      "frontendBuildCommand": "start fruit_box_game.html",
+      "frontendBuildCommand": "npm run build",
       "backendBuildCommand": ""
       "outputDirectory": "build"
     }
